@@ -25,6 +25,26 @@ def runProgram(memory):
             break
     return memory
 
+def printProgram(memory):
+    ip = 0
+    while True:
+        opcode = memory[ip]
+        addr1 = memory[ip+1]
+        addr2 = memory[ip+2]
+        addr3 = memory[ip+3]
+        if opcode == 1:
+            print(f"ADD [{addr1}]={memory[addr1]} [{addr2}]={memory[addr2]} => {addr3}")
+            ip = ip + 4
+        elif opcode == 2:
+            print(f"MUL [{addr1}]={memory[addr1]} [{addr2}]={memory[addr2]} => {addr3}")
+            ip = ip + 4
+        elif opcode == 99:
+            print("EXIT")
+            break
+        else:
+            print(f"Error interpreting opcode {opcode}")
+            break
+
 def part1():
     mem = readFileToIntList("input2.txt")
     mem[1] = 12
@@ -54,4 +74,6 @@ def part2():
     
 
 if __name__ == '__main__':
-    part2()
+    #part2()
+    mem = readFileToIntList("input2.txt")
+    printProgram(mem)
