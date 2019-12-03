@@ -29,10 +29,30 @@ def readFileToPointLists(filename):
             n = getNewPoint(o, s)
             p2.append(n)
             o = n
-        #intlist = list(map(int, codes))
-        #print(p1)
-        #print("################################################################")
-        #print(p2)
+    return (p1, p2)
+
+def readFileToPointDistLists(filename):
+    with open(filename, "r") as f:
+        fst = f.readline().strip().split(',')
+        ori = (0,0)
+        p1 = [(0,0,0)]
+        o = ori
+        d = 0
+        for s in fst:
+            x,y = getNewPoint(o, s)
+            d = d + abs(x-o[0]) + abs(y-o[0])
+            p1.append((x,y,d))
+            o = (x,y)
+            
+        snd = f.readline().strip().split(',')
+        p2 = [(0,0,0)]
+        o = ori
+        d = 0
+        for s in snd:
+            x,y = getNewPoint(o, s)
+            d = d + abs(x-o[0]) + abs(y-o[0])
+            p2.append((x,y,d))
+            o = (x,y)
     return (p1, p2)
 
 def lineIsHorizontal(line):
@@ -47,16 +67,9 @@ def lineIsHorizontal(line):
 def linesCrossing(line_a, line_b):
     ha = lineIsHorizontal(line_a)
     hb = lineIsHorizontal(line_b)
-    #print(f"{line_a} | {line_b}")
-    #if ha and (not hb):
-    #    print(f"{ha}, {hb}")
-    #if (not ha) and hb:
-    #    print(f"{ha}, {hb}")
     if (ha and hb): # lines are parallel and can't cross
-        #print("parallel: both horizontal")
         return None
     elif ((not ha) and (not hb)): # lines are parallel and can't cross
-        #print("parallel: both vertical")
         return None
 
     pa1, pa2 = line_a
@@ -72,10 +85,8 @@ def linesCrossing(line_a, line_b):
         bymin = min(yb1, yb2)
         bymax = max(yb1, yb2)
         if (axmin <= xb1 and xb1 <= axmax) and (bymin <= ya1 and ya1 <= bymax):
-            #print("found")
             return (xb1, ya1)
         else:
-            #print(f"horizontal a, {xb1}, {xa1}, {xa2}")
             return None
     else:
         aymin = min(ya1, ya2)
@@ -83,10 +94,8 @@ def linesCrossing(line_a, line_b):
         bxmin = min(xb1, xb2)
         bxmax = max(xb1, xb2)
         if (aymin <= yb1 and yb1 <= aymax) and (bxmin <= xa1 and xa1 <= bxmax):
-            #print("found")
             return (xa1, yb1)
         else:
-            #print(f"vertical a, {yb1}, {ya1}, {ya2}")
             return None
 
 def naivePart1():
@@ -103,5 +112,25 @@ def naivePart1():
     hits.sort()
     print(hits)
 
+def naivePart2():
+    fst, snd = readFileToPointDistLists("t1.txt")
+    dists = []
+    for i in range(1,len(fst)):
+        xa1,ya1,da1 = fst[i-1]
+        xa2,ya2,da2 = fst[i]
+        line_a = ((xa1, ya1), (xa2, ya2))
+        for j in range(1,len(snd)):
+            xb1,yb1,db1 = snd[j-1]
+            xb2,yb2,db2 = snd[j]
+            line_b = ((xb1, yb1), (xb2, yb2))
+            cross = linesCrossing(line_a, line_b)
+            if cross:
+                da = da1 + abs(cross[0]-xa1) + abs(cross[1]-ya1)
+                db = db1 + abs(cross[0]-xb1) + abs(cross[1]-yb1)
+                dists.append(da+db)
+
+    dists.sort()
+    print(dists)
+
 if __name__ == '__main__':
-    naivePart1()
+    naivePart2()

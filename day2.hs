@@ -22,7 +22,8 @@ part1 :: Array Int Int -> Int
 part1 mem = runProgram upd 0
   where upd = mem // [(1,12), (2,2)]
 
-part2 mem = head [ 100*noun+verb | noun <- [0..99], verb <- [0..99], runProgram (upd noun verb) 0 == 19690720]
+part2 mem = take 1 [ 100*noun+verb | 
+        noun <- [0..99], verb <- [0..99], runProgram (upd noun verb) 0 == 19690720]
   where upd n v = mem // [(1,n), (2,v)]
 
 main = do
