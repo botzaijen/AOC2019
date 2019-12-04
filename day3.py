@@ -40,7 +40,7 @@ def readFileToPointDistLists(filename):
         d = 0
         for s in fst:
             x,y = getNewPoint(o, s)
-            d = d + abs(x-o[0]) + abs(y-o[0])
+            d = d + int(s[1:])
             p1.append((x,y,d))
             o = (x,y)
             
@@ -50,7 +50,7 @@ def readFileToPointDistLists(filename):
         d = 0
         for s in snd:
             x,y = getNewPoint(o, s)
-            d = d + abs(x-o[0]) + abs(y-o[0])
+            d = d + int(s[1:])
             p2.append((x,y,d))
             o = (x,y)
     return (p1, p2)
@@ -113,7 +113,7 @@ def naivePart1():
     print(hits)
 
 def naivePart2():
-    fst, snd = readFileToPointDistLists("t1.txt")
+    fst, snd = readFileToPointDistLists("input3.txt")
     dists = []
     for i in range(1,len(fst)):
         xa1,ya1,da1 = fst[i-1]
