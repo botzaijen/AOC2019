@@ -155,26 +155,14 @@ def show(display):
     max_x = max(xs)
     min_y = min(ys)
     max_y = max(ys)
+    #line = [str(x) for x in range(min_x,max_x+1)]
+    #print(''.join(line))
 
     for y in range(min_y, max_y+1):
-        line = []
+        line = [] #[str(y)]
         for x in range(min_x, max_x+1):
             pos = (x,y)
-            if x == -1:
-                continue
-            c = display[pos]
-            if c == 0:
-                line.append(' ');
-            elif c == 1:
-                line.append('+');
-            elif c == 2:
-                line.append('#');
-            elif c == 3:
-                line.append('=');
-            elif c == 4:
-                line.append('O');
-            else:
-                assert 'Unknown color', c
+            line.append(display[pos])
         print(''.join(line))
 
 
@@ -187,17 +175,18 @@ class Vertex(object):
     def add_adjecent(self,move_inst, response):
         idx = move_inst - 1
         x,y = self.pos
-        if move_inst == move_cmd['north']:
-            y -= 1
-        elif move_inst == move_cmd['south']:
+        if move_inst == 1:
             y += 1
-        elif move_inst == move_cmd['west']:
+        elif move_inst == 2:
+            y -= 1
+        elif move_inst == 3:
             x += 1
-        elif move_inst == move_cmd['east']:
+        elif move_inst == 4:
             x -= 1
         else: 
-            print("Error illegal move_inst")
+            print(f"Error illegal move_inst {move_inst}")
         adjpos = (x,y)
+        tile = ' '
         if response == 0:
             tile = '#'
         elif response == 1:
@@ -205,7 +194,7 @@ class Vertex(object):
         elif response == 2:
             tile = 'O'
         else: 
-            print("Error illegal response")
+            print(f"Error illegal response {response}")
         self.edges[idx] = Vertex(adjpos, tile)
         return self.edges[idx]
 
@@ -214,62 +203,86 @@ class Vertex(object):
     def __str__(self):
         return 'Vertex(p='+str(self.pos)+', t='+str(self.tile)+', ['+str(self.edges)+'])'
 
+def dirToPos(pos, move_inst):
+    x,y = pos
+    if move_inst == 1:
+        y += 1
+    elif move_inst == 2:
+        y -= 1
+    elif move_inst == 3:
+        x -= 1
+    elif move_inst == 4:
+        x += 1
+    else: 
+        print(f"Error illegal move {move_inst}")
+    return (x,y)
+
+def get_adjecent(pos):
+    return [dirToPos(pos,d) for d in [1,2,3,4]]
+
+def back(move_inst):
+    if move_inst == 1:
+        return 2
+    elif move_inst == 2:
+        return 1
+    elif move_inst == 3:
+        return 4
+    elif move_inst == 4:
+        return 3
+    else: 
+        print(f"Error illegal move {move_inst}")
+        return None
+
+
+
 def part():
     memory = readFileToIntList("input15.txt")
-    movemap = {} 
+    movemap = defaultdict(lambda: ' ') 
     prg = Program(memory)
-    pos = (0,0)
+    start_pos = (0,0)
     tile = '.'
-    movemap[pos] = tile
+    movemap[start_pos] = tile
+    came_from = []
     move_cmd = {'north':1, 'south':2, 'west':3, 'east':4} 
-    start = Vertex(pos, tile)
-    def search_adj(vert):
-        for mv, adj in enumerate(1,vert.edges):
-            if adj is None:
-                resp = prg.run([mv])
-                neigh = vert.add_adjecent(mv,resp)
-                movemap[neigh.pos] = neigh.tile
-                if resp == 1:
-                    search_adj(neigh)
-                elif resp == 2:
-                    return neigh.pos
+    invmove_cmd = {v:k for k,v in move_cmd.items()} 
+    def search_adj(start):
+        stack = list(zip([1,2,3,4],get_adjecent(start)))
+        while stack:
+            move, pos = stack.pop()
+            resp = prg.run([move])[0]
+            print(f"attempting move {invmove_cmd[move]} to {pos}", end="")
+            if resp == 0:
+                movemap[pos] = '#'
+                print(" found #, did not move")
+            elif resp == 1:
+                print(f" found {movemap[pos]}, new position {pos}")
+                if movemap[pos] == '.':
+                    movemap[pos] = 'x'
+                else:
+                    came_from.append(back(move))
+                    movemap[pos] = '.'
+                explored = True
+                for mv, adj in enumerate(get_adjecent(pos), 1):
+                    if movemap[adj] == ' ':
+                        explored = False
+                        stack.append((mv,adj))
+                if explored:
+                    print("backtracking...")
+                    cam = came_from.pop()
+                    adj = dirToPos(pos,cam)
+                    stack.append((cam,adj))
+            elif resp == 2:
+                movemap[pos] = 'O'
+                return pos
+            else:
+                print("Error")
+        movemap[pos] = 'D'
 
-
-
-
-
-
-
-def get_topological_order(graph, startname):
-    topo_order = []
-    visited = set()
-
-    def toposort(vertex, name):
-        if not vertex.edges: # the vertex has no outgoing edges
-            topo_order.append(name)
-            return
-        for childname in vertex.edges:
-            if childname in visited:
-                continue
-            visited.add(childname)
-            toposort(graph[childname], childname)
-        topo_order.append(name)
-    
-    toposort(graph[startname], startname)
-    return topo_order
-
-def part1(graph):
-    order = get_topological_order(graph, "FUEL")
-    order.reverse()
-    for name in order:
-        vertex = graph[name]
-        if vertex.rxn_produced == 0:
-            print(name + str(vertex))
-        its = max(1, math.ceil(vertex.required / vertex.rxn_produced))
-        for reactant_name, cost in vertex.edges.items():
-            graph[reactant_name].required += its*cost
-    return graph["ORE"].required
+    result = search_adj(start_pos)
+    print(f"found oxygen at {result}")
+    show(movemap)
 
 if __name__ == '__main__':
+    part()
 
 
